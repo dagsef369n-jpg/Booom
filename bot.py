@@ -1,12 +1,11 @@
 import os
 import csv
 from io import StringIO
-from flask import Flask, request
 import json
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
-    Application,
+    ApplicationBuilder,
     CommandHandler,
     CallbackQueryHandler,
     MessageHandler,
@@ -17,7 +16,6 @@ from telegram.ext import (
 BOT_TOKEN = "8692852807:AAHOZDtwRXNdtkBAMx86fnPtKo8J4b-u5gE"
 SECRET_PASSWORD = "schooladmin123" 
 DATA_FILE = "school_data.json"
-RENDER_URL = "https://swa-connect-bot.onrender.com/"
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
@@ -52,11 +50,6 @@ def load_db():
 def save_db():
     with open(DATA_FILE, 'w') as f:
         json.dump(db, f)
-
-load_db()
-
-app_flask = Flask(__name__)
-telegram_app = Application.builder().token(BOT_TOKEN).updater(None).build()
 
 def get_grade_keyboard():
     return InlineKeyboardMarkup([
@@ -114,7 +107,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         db["registration_state"][chat_id] = "waiting_for_id"
         save_db()
         await update.message.reply_text(
-            "👋 እነኳን ደና መጡ! Welcome to the SWA School Communication Bot!\n\n"
+            "👋 Welcome to the SWA School Communication Bot!\n\n"
             "To receive behavior alerts and grades, please reply with your child's unique Student ID (Example: SWA-105)."
         )
 
@@ -378,38 +371,23 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text("Please type /start to begin.")
 
-telegram_app.add_handler(CommandHandler('start', start))
-telegram_app.add_handler(CommandHandler('exit', exit_chat))
-telegram_app.add_handler(CommandHandler('changeid', change_id))
-telegram_app.add_handler(CommandHandler('setdirector', set_director))
-telegram_app.add_handler(CommandHandler('setadmin7', set_admin7))
-telegram_app.add_handler(CommandHandler('setadmin8', set_admin8))
-telegram_app.add_handler(CommandHandler('setteacher', set_teacher))
-telegram_app.add_handler(CommandHandler('director', director_panel))
-telegram_app.add_handler(CommandHandler('admin7', admin7_panel))
-telegram_app.add_handler(CommandHandler('admin8', admin8_panel))
-telegram_app.add_handler(CommandHandler('teacher', teacher_panel))
-telegram_app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
-telegram_app.add_handler(CallbackQueryHandler(button_handler))
-telegram_app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
-
-@app_flask.route('/')
-def home():
-    return "Bot is running actively via Webhook!"
-
-@app_flask.route(f'/{BOT_TOKEN}', methods=['POST'])
-def webhook():
-    json_data = request.get_json(force=True)
-    update = Update.de_json(json_data, telegram_app.bot)
-    telegram_app.update_queue.put(update)
-    return 'ok'
-
-async def setup_webhook():
-    await telegram_app.initialize()
-    await telegram_app.bot.set_webhook(url=RENDER_URL + BOT_TOKEN)
-
-import asyncio
-asyncio.run(setup_webhook())
-
 if __name__ == '__main__':
-    app_flask.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+    load_db()
+    
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app.add_handler(CommandHandler('start', start))
+    app.add_handler(CommandHandler('exit', exit_chat))
+    app.add_handler(CommandHandler('changeid', change_id))
+    app.add_handler(CommandHandler('setdirector', set_director))
+    app.add_handler(CommandHandler('setadmin7', set_admin7))
+    app.add_handler(CommandHandler('setadmin8', set_admin8))
+    app.add_handler(CommandHandler('setteacher', set_teacher))
+    app.add_handler(CommandHandler('director', director_panel))
+    app.add_handler(CommandHandler('admin7', admin7_panel))
+    app.add_handler(CommandHandler('admin8', admin8_panel))
+    app.add_handler(CommandHandler('teacher', teacher_panel))
+    app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
+    app.add_handler(CallbackQueryHandler(button_handler))
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
+    
+    app.run_polling()
