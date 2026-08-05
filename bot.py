@@ -15,7 +15,6 @@ from telegram.ext import (
     ContextTypes
 )
 
-# --- WEB SERVER PING (Keeps Render Free Tier Alive) ---
 app = Flask('')
 
 @app.route('/')
@@ -29,7 +28,6 @@ def keep_alive():
     t = Thread(target=run_web)
     t.start()
 
-# --- CONFIGURATION ---
 BOT_TOKEN = "8692852807:AAHXpv2ToCuuhSYtgs8DdHKn0_RTUpoa5so"
 SECRET_PASSWORD = "schooladmin123" 
 DATA_FILE = "school_data.json"
@@ -390,7 +388,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 if __name__ == '__main__':
     load_db()
-    keep_alive()  # Starts the web ping server so Render stays awake
+    keep_alive()
     
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler('start', start))
@@ -404,7 +402,6 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler('admin7', admin7_panel))
     app.add_handler(CommandHandler('admin8', admin8_panel))
     app.add_handler(CommandHandler('teacher', teacher_panel))
-    app.add_handler(CommandHandler('student', lambda u,c: None)) 
     app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
