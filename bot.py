@@ -28,7 +28,7 @@ def keep_alive():
     t = Thread(target=run_web)
     t.start()
 
-BOT_TOKEN = "8692852807:AAHXpv2ToCuuhSYtgs8DdHKn0_RTUpoa5so"
+BOT_TOKEN = "8692852807:AAHOZDtwRXNdtkBAMx86fnPtKo8J4b-u5gE"
 SECRET_PASSWORD = "schooladmin123" 
 DATA_FILE = "school_data.json"
 
